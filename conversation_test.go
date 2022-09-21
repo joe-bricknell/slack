@@ -573,3 +573,14 @@ func TestMarkConversation(t *testing.T) {
 		return
 	}
 }
+
+func TestConversationsSetTeams(t *testing.T) {
+	http.HandleFunc("/admin.conversations.setTeams", okJSONHandler)
+	once.Do(startServer)
+	api := New("testing-token", OptionAPIURL("http://"+serverAddr+"/"))
+	err := api.ConversationsSetTeams("CXXXXXXXX", &ConversationSetTeamsParameters{OrgChannel: true})
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+		return
+	}
+}

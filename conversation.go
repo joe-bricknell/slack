@@ -73,6 +73,12 @@ type GetConversationsForUserParameters struct {
 	ExcludeArchived bool
 }
 
+type ConversationSetTeamsParameters struct {
+	OrgChannel    bool
+	TeamTargetIDs string
+	TeamID        string
+}
+
 type responseMetaData struct {
 	NextCursor string `json:"next_cursor"`
 }
@@ -648,6 +654,37 @@ func (api *Client) MarkConversationContext(ctx context.Context, channel, ts stri
 	response := &SlackResponse{}
 
 	err := api.postMethod(ctx, "conversations.mark", values, response)
+	if err != nil {
+		return err
+	}
+	return response.Err()
+}
+
+// ConversationsSetTeams sets the workspace in an Enterprise grid org that connect to a public or private channel.
+func (api *Client) ConversationsSetTeams(channel string, params *ConversationSetTeamsParameters) error {
+	return api.ConversationsSetTeamsContext(context.Background(), channel, params)
+}
+
+// ConversationsSetTeamsContext sets the workspace in an Enterprise grid org that connect to a public or private channel with a custom context.
+func (api *Client) ConversationsSetTeamsContext(ctx context.Context, channelID string, params *ConversationSetTeamsParameters) error {
+	values := url.Values{
+		"token":      {api.token},
+		"channel_id": {channelID},
+	}
+
+	if params.OrgChannel {
+		values.Add("org_channel", strconv.FormatBool(params.OrgChannel))
+	}
+	if params.TeamTargetIDs != "" {
+		values.Add("target_team_ids", params.TeamTargetIDs)
+	}
+	if params.TeamID != "" {
+		values.Add("team_id", params.TeamID)
+	}
+
+	response := &SlackResponse{}
+
+	err := api.postMethod(ctx, "admin.conversations.setTeams", values, response)
 	if err != nil {
 		return err
 	}
